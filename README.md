@@ -104,7 +104,7 @@ If CR4.SMEP = 1, software operating in supervisor mode cannot fetch instructions
 Basically, SMEP is a CPU mitigation that prevents the kernel from executing code that lives in the virtual address space of a usermode process.  
 Going back to the exploit, we see that before the function defined by our input buffer is called, we call ```sub_10788```. It is not unreasonable to guess that this function does something to ```CR4.SMEP```.
 
-```
+```cpp
 unsigned __int64 __fastcall sub_10788(unsigned __int64 *a1)
 {
     unsigned __int64 v1; // rax@1
