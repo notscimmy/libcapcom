@@ -144,9 +144,9 @@ The driver will directly start executing the code defined by our ```code``` byte
 static const uint32_t user_function_ptr_offset = 0x2;
 static uint8_t code_template[] =
 {
-	0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // movabs rax, user_function_ptr
-	0xFF, 0xE0													// jmp rax
-	};
+    0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // movabs rax, user_function_ptr
+    0xFF, 0xE0													// jmp rax
+};
 ```
 
 This simple shellcode template will be the code that the driver executes for us. The first instruction will be ```movabs rax, user_function_ptr``` which moves the immediate 8 bytes into ```rax```. Next, it will execute ```jmp rax```, which jumps to the address stored in ```rax```, which will be our user-defined function pointer.  
