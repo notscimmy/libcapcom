@@ -60,7 +60,7 @@ LABEL_16:
 The code basically does the following:
 1. Check if the control code is for a 32-bit (0xAA012044) or 64-bit (0xAA013044) request
 2. Check to see if the IRP packet has proper sizes. If for a 32-bit request, the input and output buffer sizes **must be 4**. If for a 64-bit request, the input buffer size **must be 8** AND the output buffer size **must be 4**
-3. Set ```v11``` to the value that is pointed to by the address at ```inputBuffer```.
+3. Set ```v11``` to the value that is pointed to by the address at ```inputBuffer```
 4. Call ```sub_10524``` with parameter v11.
 5. Finish by calling ```IofCompleteRequest```
 
@@ -89,11 +89,11 @@ signed __int64 __fastcall sub_10524(__int64 fnPtrFromBuffer)
 ```
 
 This function is where the juicy exploit comes into play. 
-1. The pointer passed into ```sub_10524``` as the first parameter is cast to a function
-2. **A very odd check to make sure that the first 8 bytes of the inputBuffer is equal to the address of the function, which lives at** ```inputBuffer + 0x8```
+1. **A very odd check to make sure that the first 8 bytes of the inputBuffer is equal to the address of the function, which lives at** ```inputBuffer + 0x8```
+2. The pointer passed into ```sub_10524``` as the first parameter is cast to a function
 3. The address of the system routine ```MmGetSystemRoutineAddress``` is saved to a local variable
 4. An unknown function ```sub_10788``` is called
-5. The function in usermode defined in the first parameter is called **with the address of the function MmGetSystemRoutineAddress**
+5. The function in usermode defined in the first parameter is called **with the address of the function MmGetSystemRoutineAddress** passed in as the first parameter to the usermode function
 6. Another unknown function ```sub_107A0``` is called
 
 ### Supervisor Mode Execution Protection
@@ -145,7 +145,7 @@ static const uint32_t user_function_ptr_offset = 0x2;
 static uint8_t code_template[] =
 {
     0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // movabs rax, user_function_ptr
-    0xFF, 0xE0													// jmp rax
+    0xFF, 0xE0                                                  // jmp rax
 };
 ```
 
@@ -172,7 +172,7 @@ capcom_payload* build_capcom_payload(uintptr_t user_function_wrapper)
 ```
 
 ### Sending the payload to the Capcom driver
-In the analysis of ```sub_10590``` above, there are quite a few checks that must pass in order for our usermode code to be called.
+In the analysis of ```sub_10590``` above, there are quite a few checks that must pass in order for our usermode code to be called. Recall the following:
 * Check to see if the IRP packet has proper sizes. If for a 32-bit request, the input and output buffer sizes **must be 4**. If for a 64-bit request, the input buffer size **must be 8** AND the output buffer size **must be 4**
 
 In this library's implementation, it only deals with the 64-bit variant of the driver. Communicating with the driver involves the WinAPI function ```DeviceIoControl```, which takes a variety of parameters. Here is the function prototype as defined by MSDN:
@@ -200,7 +200,7 @@ DeviceIoControl(device, ioctl_x64, &payload->ptr_to_code, 8, &output_buffer, 4, 
 
 ## Things to consider
 ### How does the kernel jump to an address defined in another process' virtual address space?
-```DeviceIoControl``` is a **system call**. System calls are handled by the kernel, but has access to the virtual address space of the process that invoked that syscall. For example, file and network I/O are handled by system calls, but the kernel could reasonably need access to the process' address space to pass data back to the process. Also keep in mind that a a system call does not cause a context switch, meaning that the processor context never actually changes.
+```DeviceIoControl``` is a **system call**. System calls are handled by the kernel, but has access to the virtual address space of the process that invoked that syscall. For example, file and network I/O are handled by system calls, but the kernel could reasonably need access to the process' address space to pass data back to the process. Also keep in mind that a system call does not cause a context switch, meaning that the processor context never actually changes.
 
 ### Is executing this code in the kernel safe?
 No, this is inherently unsafe because the moment a context switch happens, **CR4** gets reset, meaning **SMEP** gets reset, and the moment we context switch back to the code in usermode, we get hit with a big fat BSOD. If one is interested in a safe implementation, I highly recommend reading https://blog.can.ac/2018/04/28/escape-smep-exploiting-capcom-safely/.
