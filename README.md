@@ -200,10 +200,10 @@ DeviceIoControl(device, ioctl_x64, &payload->ptr_to_code, 8, &output_buffer, 4, 
 
 ## Things to consider
 ### How does the kernel jump to an address defined in another process' virtual address space?
-```DeviceIoControl``` is a **system call**. System calls are handled by the kernel, but has access to the virtual address space of the process that invoked that syscall. For example, file and network I/O are handled by system calls, but the kernel could reasonably need access to the process' address space to pass data back to the process. Also keep in mind that a system call does not cause a context switch, meaning that the processor context never actually changes.
+```DeviceIoControl``` is a **system call**. System calls are handled by the kernel, but is executed in the context of the thread that initiated that syscall, meaning the same virtual address space. For example, file and network I/O are handled by system calls, but the kernel could reasonably need access to the process' address space to pass data back to the process. Also keep in mind that a system call does not cause a context switch, meaning that the processor context is still the same thread context that executed that system call.
 
 ### Is executing this code in the kernel safe?
-No, this is inherently unsafe because the moment a context switch happens, **CR4** gets reset, meaning **SMEP** gets reset, and the moment we context switch back to the code in usermode, we get hit with a big fat BSOD. If one is interested in a safe implementation, I highly recommend reading https://blog.can.ac/2018/04/28/escape-smep-exploiting-capcom-safely/.
+No, this is inherently unsafe. Imagine in a multi-processor system that CPU 0 is executing this exploit code. The kernel decides to context switch this thread off of CPU 0, and some time in the future, our thread executing the exploit gets context switched onto CPU 1. Recall that the capcom driver **DISABLED** SMEP for CPU 0 before executing the exploit. Now that the thread is on CPU 1, SMEP is **ENABLED**, meaning that the moment that the exploit jumps to code mapped to userspace pages, we get hit with a big fat BSOD. If one is interested in a safe implementation, I highly recommend reading https://blog.can.ac/2018/04/28/escape-smep-exploiting-capcom-safely/.
 
 ## How to use this library
 1. Build the project
